@@ -1,4 +1,5 @@
-# LED Matrix Display
+# Raspberry Pi based HUB75 LED Matrix Display Management System (Fully OpenSource)
+
 ## Description
 This project is a web-based system for managing and scheduling advertisements to be displayed on an LED matrix display. The system allows users to upload advertisements and specify a start and end time for them to be displayed.
 
