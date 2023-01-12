@@ -10,7 +10,8 @@ This project is a web-based system for managing and scheduling advertisements to
 ![Screenshot from 2023-01-12 17-40-37](https://user-images.githubusercontent.com/12392345/212064404-41848de7-1a26-428f-8ea6-1a9b18e53696.png)
 ![Screenshot from 2023-01-12 17-41-00](https://user-images.githubusercontent.com/12392345/212064392-7e51cc1c-44ba-4b44-ad70-8c58300c5915.png)
 
-
+## Box Design for Housing on GrabCAD
+- https://grabcad.com/library/hub75-rgb-led-matrix-display-1
 
 ## Features
 - User login and registration
