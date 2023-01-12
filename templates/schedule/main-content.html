@@ -1,0 +1,169 @@
+<script>
+function sortTable(column) {
+  // get the table and the rows
+  var table = document.getElementById("ad-table");
+  var rows = table.rows;
+
+  // get the heading row and the rows as an array, excluding the heading
+  var headingRow = rows[0];
+  var rowArray = Array.prototype.slice.call(rows, 1);
+
+  // initialize a toggle to keep track of the sort order
+  var ascending = true;
+  if (headingRow.getAttribute("data-sort-column") === column) {
+    // if the same column was clicked again, reverse the sort order
+    ascending = !(headingRow.getAttribute("data-sort-order") === "ascending");
+  }
+
+  // set the data-sort-column and data-sort-order attributes on the heading row
+  headingRow.setAttribute("data-sort-column", column);
+  headingRow.setAttribute("data-sort-order", ascending ? "ascending" : "descending");
+
+  // sort the array based on the specified column
+  rowArray.sort(function(rowA, rowB) {
+    // get the values for the specified column for each row
+    var valueA = rowA.cells[column].innerHTML;
+    var valueB = rowB.cells[column].innerHTML;
+
+    // sort the rows based on the values
+    if (ascending) {
+      if (valueA < valueB) {
+        return -1;
+      }
+      if (valueA > valueB) {
+        return 1;
+      }
+    } else {
+      if (valueA < valueB) {
+        return 1;
+      }
+      if (valueA > valueB) {
+        return -1;
+      }
+    }
+    return 0;
+  });
+
+  // clear the table body
+  table.tBodies[0].innerHTML = "";
+
+  // add the heading row and the sorted rows back to the table
+  table.tBodies[0].appendChild(headingRow);
+  rowArray.forEach(function(row) {
+    table.tBodies[0].appendChild(row);
+  });
+}
+
+
+// Send an AJAX request to the /fetchdata.py route to retrieve the data from the database
+function getData() {
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      // Parse the JSON data
+      var data = JSON.parse(this.responseText);
+      // Loop through the data and add a row to the table for each ad
+      for (var i = 0; i < data.length; i++) {
+        var ad = data[i];
+        var row = document.createElement("tr");
+        row.innerHTML = 
+          "<td class='mui--text-left' style='padding: 10px'>" + ad.id + "</td>" +
+          "<td class='mui--text-left' style='padding: 10px'>" + ad.ad_start_time + "</td>" +
+          "<td class='mui--text-left' style='padding: 10px'>" + ad.ad_end_time + "</td>" +
+          "<td class='mui--text-left' style='padding: 10px'>" + ad.ad_name + "</td>" +
+          "<td class='mui--text-left' style='padding: 10px'>" + ad.ad_description + "</td>" +
+          "<td class='mui--text-left' style='padding: 10px'>" + ad.file_name + "</td>" +
+          "<td class='mui--text-left' style='padding: 10px'>" + ad.ad_type + "</td>" +
+          "<td class='mui--text-left' style='padding: 10px'><a class='mui-btn mui-btn--danger mui-btn--flat' href='#' onclick='deleteAd(" + ad.id + ")'>Delete</a></td>";
+        document.getElementById("ads-table-body").appendChild(row);
+      }
+    }
+  };
+  xhr.open('GET', '/fetchdata.py', true);
+  xhr.send();
+}
+
+
+
+// Call the getData function after the page has finished loading
+window.addEventListener("load", getData);
+
+function updateTable() {
+  // Send an AJAX request to the /fetchdata route to retrieve the data from the database
+  var cnx = new XMLHttpRequest();
+  cnx.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      // clear the current data in the table
+      var table = document.getElementById("ad-table");
+      var rows = table.rows;
+      for (var i = rows.length - 1; i > 0; i--) {
+        table.deleteRow(i);
+      }
+      // Parse the JSON data
+      var data = JSON.parse(this.responseText);
+      // Loop through the data and add a row to the table for each ad
+      for (var i = 0; i < data.length; i++) {
+        var ad = data[i];
+        var row = document.createElement("tr");
+        row.innerHTML = "<td>" + ad.id + "</td>" +
+                        "<td>" + ad.ad_start_time + "</td>" +
+                        "<td>" + ad.ad_end_time + "</td>" +
+                        "<td>" + ad.ad_name + "</td>" +
+                        "<td>" + ad.ad_description + "</td>" +
+                        "<td>" + ad.file_name + "</td>" +
+                        "<td>" + ad.ad_type + "</td>" +
+                        "<td><a href='#' onclick='deleteAd(" + ad.id + ")'>Delete</a></td>";
+        document.getElementById("ads-table-body").appendChild(row);
+      }
+    }
+  };
+  cnx.open("GET", "/fetchdata.py", true);
+  cnx.send();
+}
+
+
+function deleteAd(id) {
+  // Create an XMLHttpRequest object
+  var xhr = new XMLHttpRequest();
+
+  // Set up the request
+  xhr.open('DELETE', '/delete-ad/' + id);
+
+  // Set up the event handler for the request
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      // Update the table with the new data
+      updateTable();
+    }
+  };
+
+  // Send the request
+  xhr.send();
+}
+
+</script>
+
+<h1 class="mui--text-center mui--text-display2">Ad Schedule</h1>
+<div class="row">
+  <div class="col s12">
+    <div class="card-panel green lighten-4">
+      <table class="mui-table mui-table--bordered">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">ID</th>
+            <th onclick="sortTable(1)">Start Time</th>
+            <th onclick="sortTable(2)">End Time</th>
+            <th onclick="sortTable(3)">Ad Name</th>
+            <th onclick="sortTable(4)">Ad Description</th>
+            <th onclick="sortTable(5)">File</th>
+            <th onclick="sortTable(6)">Type</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ads-table-body">
+          <!-- Python script will populate this table -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

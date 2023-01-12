@@ -1,0 +1,62 @@
+<!-- Include the Font Awesome CSS file -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
+
+<!-- HTML code for the play/pause button -->
+<button id="play-pause-button" class="mui-btn mui-btn--primary mui-btn--raised">
+  <i class="fa fa-play" style="display:inline-block;"></i>
+  <i class="fa fa-pause" style="display:none;"></i>
+</button>
+
+<!-- JavaScript code to handle the button clicks -->
+<script>
+  // Get a reference to the button
+  const button = document.getElementById('play-pause-button');
+
+  // Set a flag to keep track of whether the script is running or not
+  let isRunning = false;
+
+  // Set up a function to start running the script
+  function startScript() {
+    // Set the isRunning flag to true
+    isRunning = true;
+
+    // Show the pause icon and hide the play icon
+    document.querySelector('.fa-play').style.display = 'none';
+    document.querySelector('.fa-pause').style.display = 'inline-block';
+
+    // Send an HTTP request to start running the script
+    $.ajax({
+      url: '/start_script',
+      success: function(response) {
+        console.log(response);
+      }
+    });
+  }
+
+  // Set up a function to stop running the script
+  function stopScript() {
+    // Set the isRunning flag to false
+    isRunning = false;
+
+    // Show the play icon and hide the pause icon
+    document.querySelector('.fa-play').style.display = 'inline-block';
+    document.querySelector('.fa-pause').style.display = 'none';
+
+    // Send an HTTP request to stop running the script
+    $.ajax({
+      url: '/stop_script',
+      success: function(response) {
+        console.log(response);
+      }
+    });
+  }
+
+  // Add an event listener to the button to toggle the script execution
+  button.addEventListener('click', function() {
+    if (isRunning) {
+      stopScript();
+    } else {
+      startScript();
+    }
+  });
+</script>

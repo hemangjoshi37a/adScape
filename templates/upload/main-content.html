@@ -1,0 +1,34 @@
+<div class="container">
+  <h1 class="mui--text-center mui--text-display2">Upload an Advertisement</h1>
+  <div class="row">
+    <div class="col s12 m6">
+      <div class="card-panel white" style="padding: 20px">
+        <form action="/upload" method="post" enctype="multipart/form-data">
+          <div class="mui-form-group">
+            <label for="start_time">Start Time</label>
+            <input type="datetime-local" name="start_time" id="start_time" required class="mui-form-control">
+          </div>
+          <div class="mui-form-group">
+            <label for="end_time">End Time</label>
+            <input type="datetime-local" name="end_time" id="end_time" required class="mui-form-control">
+          </div>
+          <div class="mui-form-group">
+            <label for="ad_name">Ad Name</label>
+            <input type="text" id="ad_name" name="ad_name" placeholder="Enter ad name here" required class="mui-form-control">
+          </div>
+          <div class="mui-form-group">
+            <label for="ad_description">Ad Description</label>
+            <textarea id="ad_description" name="ad_description" placeholder="Enter ad detailed description" class="mui-form-control" required></textarea>
+          </div>
+          <div class="mui-form-group">
+            <label for="ad_file">Select a file</label>
+            <input type="file" id="ad_file" name="ad_file" required onchange="updateFileName()" class="mui-form-control">
+          </div>
+          <div class="mui-form-group">
+            <input type="submit" value="Submit" class="mui-btn mui-btn--primary mui-btn--raised">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
