@@ -1,4 +1,6 @@
-![adScape](https://user-images.githubusercontent.com/12392345/212064058-e2148742-e834-469b-b75d-0a858497a308.jpeg)
+<div style="text-align: center;">
+  <img src="https://user-images.githubusercontent.com/12392345/212064058-e2148742-e834-469b-b75d-0a858497a308.jpeg" alt="adScape">
+</div>
 
 
 # Raspberry Pi based HUB75 LED Matrix Display Management System (Fully OpenSource)
@@ -39,11 +41,17 @@ This project is a web-based system for managing and scheduling advertisements to
    ```
    pip install -r requirements.txt
    ```
-4. Run the application with 
+4. Type-in your mysql database auth-details in `mysql_auth.py` file.
+   ```
+   mysql_username='root'
+   mysql_password='mypasss'
+   mysql_host='localhost'
+   ```
+5. Run the application with 
    ```
    python flaskBackend.py
    ```
-5. Access the application at 
+6. Access the application at 
    ```
    http://localhost:5004
    ```
