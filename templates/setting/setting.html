@@ -14,12 +14,16 @@
                <div class="mui-panel">
                   {% for parameterName, parameter in parameters.items() %}
                   <div class="mui-form-group" style="padding: 10px">
+                     <label for="{{ parameter.description }}">{{ parameter.description }}</label>
+                     <label> : </label>
                      <label for="{{ parameterName }}">{{ parameterName }}</label>
+                     <label> = </label>
                      <select id="{{ parameterName }}" name="{{ parameterName }}" class="mui-form-control">
                      {% for value in parameter.possible_values %}
                      <option value="{{ value }}" {% if value == parameter.value %}selected{% endif %}>{{ value }}</option>
                      {% endfor %}
                      </select>
+                     
                   </div>
                   {% endfor %}
                </div>
