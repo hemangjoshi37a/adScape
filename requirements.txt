@@ -1,0 +1,4 @@
+Flask==2.2.2
+jsonify==0.5
+mysql_connector_repackaged==0.3.1
+requests==2.23.0
