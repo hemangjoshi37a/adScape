@@ -7,10 +7,11 @@
 ## Description
 This project is a web-based system for managing and scheduling advertisements to be displayed on an LED matrix display. The system allows users to upload advertisements and specify a start and end time for them to be displayed.
 
-![Screenshot from 2023-01-12 17-39-54](https://user-images.githubusercontent.com/12392345/212064257-d1a50287-9840-4f10-9ec1-8b5fbf7ed041.png)
-![Screenshot from 2023-01-12 17-40-07](https://user-images.githubusercontent.com/12392345/212064407-a01d0e63-afd4-4a97-b41d-2799890b668f.png)
-![Screenshot from 2023-01-12 17-40-37](https://user-images.githubusercontent.com/12392345/212064404-41848de7-1a26-428f-8ea6-1a9b18e53696.png)
-![Screenshot from 2023-01-12 17-41-00](https://user-images.githubusercontent.com/12392345/212064392-7e51cc1c-44ba-4b44-ad70-8c58300c5915.png)
+![Screenshot from 2023-01-21 19-14-15](https://user-images.githubusercontent.com/12392345/213869822-651b35ae-0d92-4c33-822c-519db5fcde3a.png)
+![Screenshot from 2023-01-21 19-14-33](https://user-images.githubusercontent.com/12392345/213869820-0d9ef50d-c146-45c8-94ce-8e5f9a1e0d90.png)
+![Screenshot from 2023-01-21 19-14-39](https://user-images.githubusercontent.com/12392345/213869819-ec63516b-4376-494a-a6d9-65c8469a342d.png)
+![Screenshot from 2023-01-21 19-14-48](https://user-images.githubusercontent.com/12392345/213869816-35d5bccc-6772-4f50-9ea8-e2ca4f1f0167.png)
+
 
 ## Box Design for Housing on GrabCAD
 - https://grabcad.com/library/hub75-rgb-led-matrix-display-1
