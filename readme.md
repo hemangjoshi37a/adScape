@@ -22,16 +22,25 @@ This project is a web-based system for managing and scheduling advertisements to
 - View and edit the current schedule of advertisements
 - Adjust display settings such as brightness and scroll speed
 
-## Technology Stack
+## Techn Stack
 - Front-end: HTML, CSS, JavaScript, Materialize CSS
 - Back-end: Python, Flask, SQLite
 
 ## Installation
 1. Clone the repository to your local machine
 2. Navigate to the project directory
-3. Install the required dependencies with pip install -r requirements.txt
-4. Run the application with python app.py
-5. Access the application at http://localhost:5001
+3. Install the required dependencies with 
+   ```
+   pip install -r requirements.txt
+   ```
+4. Run the application with 
+   ```
+   python flaskBackend.py
+   ```
+5. Access the application at 
+   ```
+   http://localhost:5004
+   ```
 
 ## Contributing
 We welcome contributions to this project! Please follow these guidelines when contributing:
