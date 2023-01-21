@@ -28,7 +28,13 @@ This project is a web-based system for managing and scheduling advertisements to
 
 ## Installation
 1. Clone the repository to your local machine
+   ```
+   git clone https://github.com/hemangjoshi37a/adScape.git
+   ```
 2. Navigate to the project directory
+   ```
+   cd adScape
+   ```
 3. Install the required dependencies with 
    ```
    pip install -r requirements.txt
