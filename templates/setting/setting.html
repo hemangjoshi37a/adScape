@@ -1,91 +1,95 @@
 <html>
-  <head>
-    <title>Display Settings</title>
-    <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
-    <script src="//cdn.muicss.com/mui-0.10.3/js/mui.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  </head>
-  <body>
-    {% include 'navigation.html' %}
-    <div class="container">
-      <h1 class="mui--text-center mui--text-display1">Display Settings</h1>
-      <div class="mui-container">
-        <div class="mui-panel">
-          {% for parameterName, parameter in parameters.items() %}
-          <div class="mui-form-group" style="padding: 10px">
-            <label for="{{ parameterName }}">{{ parameterName }}</label>
-            <select id="{{ parameterName }}" name="{{ parameterName }}" class="mui-form-control">
-              {% for value in parameter.possible_values %}
-                <option value="{{ value }}" {% if value == parameter.value %}selected{% endif %}>{{ value }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          {% endfor %}
-        </div>
-        <div class="mui-container mui--text-center">
-          <button type="button" id="save-button" onclick="saveSettings();">Save</button>
-        </div>
+   <head>
+      <title>Display Settings</title>
+      <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
+      <script src="//cdn.muicss.com/mui-0.10.3/js/mui.min.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   </head>
+   <body>
+      {% include 'navigation.html' %}
+      <div class="container">
+         <h1 class="mui--text-center mui--text-display1">Display Settings</h1>
+         <div class="mui-container">
+            <form id="settings-form">
+               <div class="mui-panel">
+                  {% for parameterName, parameter in parameters.items() %}
+                  <div class="mui-form-group" style="padding: 10px">
+                     <label for="{{ parameterName }}">{{ parameterName }}</label>
+                     <select id="{{ parameterName }}" name="{{ parameterName }}" class="mui-form-control">
+                     {% for value in parameter.possible_values %}
+                     <option value="{{ value }}" {% if value == parameter.value %}selected{% endif %}>{{ value }}</option>
+                     {% endfor %}
+                     </select>
+                  </div>
+                  {% endfor %}
+               </div>
+            </form>
+            <div class="mui-container mui--text-center">
+               <button type="button" id="save-button" onclick="saveSettings();">Save</button>
+            </div>
+         </div>
+         <div id="success-message" class="row" style="display: none;">
+            <div class="col s12">
+               <div class="card-panel green lighten-4">
+                  Settings saved successfully!
+               </div>
+            </div>
+         </div>
+         <div id="error-message" class="row" style="display: none;">
+            <div class="col s12">
+               <div class="card-panel red lighten-4">
+                  An error occurred while saving the settings. Please try again later.
+               </div>
+            </div>
+         </div>
       </div>
-      <div id="success-message" class="row" style="display: none;">
-        <div class="col s12">
-          <div class="card-panel green lighten-4">
-            Settings saved successfully!
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Add a script to handle saving and loading the settings -->
-    <script>
-
-      window.onload = function() {
-        // Send an AJAX request to the backend to get the settings from the database
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/get_settings');
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            // If the request was successful, set the form input values to the returned settings
-            var settings = JSON.parse(xhr.responseText);
-            for (var parameter in settings) {
-              document.getElementsByName(parameter)[0].value = settings[parameter];
-            }
-          } else {
-            // If the request failed, show an error message
-            document.getElementById('error-message').style.display = 'block';
-          }
-        };
-        xhr.send();
-      };
-
-
-      function saveSettings() {
-        // Get the settings form
-        var form = document.getElementById('settings-form');
-        // Create an object to store the settings
-        var settings = {};
-        // Loop through the form inputs and add them to the settings object
-        for (var i = 0; i < form.elements.length; i++) {
-          var input = form.elements[i];
-          settings[input.name] = input.value;
-        }
-      
-        // Send the settings to the backend using an AJAX request
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/save_settings');
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            // Show a success message if the request was successful
-            document.getElementById('success-message').style.display = 'block';
-          } else {
-            // Show an error message if the request failed
-            document.getElementById('error-message').style.display = 'block';
-          }
-        };
-        xhr.send(JSON.stringify(settings));
-      }
-
-
-      
-    </script>
-  </body>
+      <!-- Add a script to handle saving and loading the settings -->
+      <script>
+         window.onload = function() {
+         // Send an AJAX request to the backend to get the settings from the database
+         var xhr = new XMLHttpRequest();
+         xhr.open('GET', '/get_settings');
+         xhr.onload = function() {
+         if (xhr.status === 200) {
+         // If the request was successful, set the form input values to the returned settings
+         var settings = JSON.parse(xhr.responseText);
+         for (var parameter in settings) {
+         document.getElementsByName(parameter)[0].value = settings[parameter];
+         }
+         } else {
+         // If the request failed, show an error message
+         document.getElementById('error-message').style.display = 'block';
+         }
+         };
+         xhr.send();
+         };
+         
+           function saveSettings() {
+             // Get the settings form
+             var form = document.getElementById('settings-form');
+             // Create an object to store the settings
+             var settings = {};
+             // Loop through the form inputs and add them to the settings object
+             for (var i = 0; i < form.elements.length; i++) {
+               var input = form.elements[i];
+               settings[input.name] = input.value;
+             }
+           
+             // Send the settings to the backend using an AJAX request
+             var xhr = new XMLHttpRequest();
+             xhr.open('POST', '/save_setting');
+             xhr.setRequestHeader('Content-Type', 'application/json');
+             xhr.onload = function() {
+               if (xhr.status === 200) {
+                 // Show a success message if the request was successful
+                 document.getElementById('success-message').style.display = 'block';
+               } else {
+                 // Show an error message if the request failed
+                 document.getElementById('error-message').style.display = 'block';
+               }
+             };
+             xhr.send(JSON.stringify(settings));
+           }
+      </script>
+   </body>
 </html>
