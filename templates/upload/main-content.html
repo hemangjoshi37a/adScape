@@ -8,11 +8,11 @@
                <div class="card" style="padding: 20px; width: 40%; margin: 0 auto;">
                   <div class="mui-form-group">
                      <label for="start_time">Start Time</label><br>
-                     <input type="datetime-local" name="start_time" id="start_time" required class="mui-form-control" style="width: 100%;">
+                     <input type="datetime-local" name="start_time" id="start_time" required class="mui-form-control" style="width: 100%;" onchange="validateEndTime()">
                   </div>
                   <div class="mui-form-group">
                      <label for="end_time">End Time</label><br>
-                     <input type="datetime-local" name="end_time" id="end_time" required class="mui-form-control" style="width: 100%;">
+                     <input type="datetime-local" name="end_time" id="end_time" required class="mui-form-control" style="width: 100%;" onchange="validateEndTime()">
                   </div>
                   <div class="mui-form-group">
                      <label for="ad_name">Ad Name</label><br>
@@ -27,7 +27,7 @@
                      <input type="file" id="ad_file" name="ad_file" required onchange="updateFileName()" class="mui-form-control" style="width: 100%;">
                   </div>
                   <div class="mui-form-group">
-                     <input type="submit" value="Submit" class="mui-btn mui-btn--primary mui-btn--raised" style="width: 100%;">
+                     <input type="submit" value="Submit" class="mui-btn mui-btn--primary mui-btn--raised" style="width: 100%;" id="submit-button" disabled>
                   </div>
                </div>
             </form>
@@ -35,3 +35,16 @@
       </div>
    </div>
 </div>
+<script>
+   function validateEndTime() {
+     var start_time = document.getElementById("start_time").value;
+     var end_time = document.getElementById("end_time").value;
+     var submit_button = document.getElementById("submit-button");
+     if (start_time >= end_time) {
+         submit_button.disabled = true;
+         alert("End time must be greater than start time");
+     } else {
+         submit_button.disabled = false;
+     }
+   }
+</script>
