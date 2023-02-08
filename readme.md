@@ -67,7 +67,10 @@ We welcome contributions to this project! Please follow these guidelines when co
 ## License
 This project is licensed under the MIT License. See the LICENSE file for more information.
 
+
 ## 📫 How to reach me
+[![telephone (3)](https://user-images.githubusercontent.com/12392345/217643890-42fc35f4-4bfb-4b3c-a3d6-99fea81f149a.png)](tel:+917016525813) &nbsp;
+[<img height="36" src="https://cdn.simpleicons.org/similarweb"/>](https://hjlabs.in/) &nbsp;
 [<img height="36" src="https://cdn.simpleicons.org/WhatsApp"/>](https://wa.me/917016525813) &nbsp;
 [<img height="36" src="https://cdn.simpleicons.org/telegram"/>](https://t.me/hjlabs) &nbsp;
 [<img height="36" src="https://cdn.simpleicons.org/Gmail"/>](mailto:hemangjoshi37a@gmail.com) &nbsp;
@@ -79,3 +82,4 @@ This project is licensed under the MIT License. See the LICENSE file for more in
 [<img height="36" src="https://cdn.simpleicons.org/Instagram"/>](https://www.instagram.com/hemangjoshi37) &nbsp;
 [<img height="36" src="https://cdn.simpleicons.org/Pinterest"/>](https://in.pinterest.com/hemangjoshi37a) &nbsp;
 [<img height="36" src="https://cdn.simpleicons.org/Blogger"/>](http://hemangjoshi.blogspot.com) &nbsp;
+[<img height="36" src="https://cdn.simpleicons.org/gitlab"/>](https://gitlab.com/hemangjoshi37a) &nbsp;
