@@ -69,7 +69,6 @@ This project is licensed under the MIT License. See the LICENSE file for more in
 
 
 ## 📫 How to reach me
-[![telephone (3)](https://user-images.githubusercontent.com/12392345/217643890-42fc35f4-4bfb-4b3c-a3d6-99fea81f149a.png)](tel:+917016525813) &nbsp;
 [<img height="36" src="https://cdn.simpleicons.org/similarweb"/>](https://hjlabs.in/) &nbsp;
 [<img height="36" src="https://cdn.simpleicons.org/WhatsApp"/>](https://wa.me/917016525813) &nbsp;
 [<img height="36" src="https://cdn.simpleicons.org/telegram"/>](https://t.me/hjlabs) &nbsp;
