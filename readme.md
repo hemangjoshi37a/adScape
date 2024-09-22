@@ -15,9 +15,6 @@ This project is a web-based system for managing and scheduling advertisements to
 ![Screenshot from 2023-01-21 19-14-48](https://user-images.githubusercontent.com/12392345/213869816-35d5bccc-6772-4f50-9ea8-e2ca4f1f0167.png)
 
 
-## Box Design for Housing on GrabCAD
-- https://grabcad.com/library/hub75-rgb-led-matrix-display-1
-
 ## Features
 - User login and registration
 - Upload and schedule advertisements to be displayed on the LED matrix
@@ -112,12 +109,6 @@ This project is licensed under the MIT License. See the LICENSE file for more in
 - [IoT_Load_Cell_using_ESP8266_NodeMC : Read ADC value from High Precision 12bit ADS1015 ADC Sensor and Display on SSD1306 SPI Display as progress bar for Arduino or ESP8266 or NodeMCU](https://github.com/hemangjoshi37a/my_Arduino/tree/master/IoT_Load_Cell_using_ESP8266_NodeMC)
 - [IoT_SSD1306_ESP8266_NodeMCU : Read from High Precision 12bit ADC seonsor ADS1015 and display to SSD1306 SPI as progress bar in ESP8266 or NodeMCU or Arduino](https://github.com/hemangjoshi37a/my_Arduino/tree/master/IoT_SSD1306_ESP8266_NodeMCU)  
 
-## Checkout Our Awesome 3D GrabCAD Models:
-- [AutoCut : Automatic Wire Cutter Machine](https://grabcad.com/library/automatic-wire-cutter-machine-1)
-- [ESP Matrix Display 5mm Acrylic Box](https://grabcad.com/library/esp-matrix-display-5mm-acrylic-box-1)
-- [Arcylic Bending Machine w/ Hot Air Gun](https://grabcad.com/library/arcylic-bending-machine-w-hot-air-gun-1)
-- [Automatic Wire Cutter/Stripper](https://grabcad.com/library/automatic-wire-cutter-stripper-1)
-
 ## Our HuggingFace Models :
 - [hemangjoshi37a/autotrain-ratnakar_1000_sample_curated-1474454086 : Stock tip message NER(Named Entity Recognition or Token Classification) using HUggingFace-AutoTrain and LabelStudio and Ratnakar Securities Pvt. Ltd.](https://huggingface.co/hemangjoshi37a/autotrain-ratnakar_1000_sample_curated-1474454086)
 
@@ -152,4 +143,3 @@ This project is licensed under the MIT License. See the LICENSE file for more in
 - [My_Projects](https://gitlab.com/hemangjoshi37a/My_Projects)
 - [Cool Arduino and ESP8266 or NodeMCU Projects](https://gitlab.com/hemangjoshi37a/my_Arduino)
 - [Telegram Trade Msg Backtest ML](https://gitlab.com/hemangjoshi37a/TelegramTradeMsgBacktestML)
-
