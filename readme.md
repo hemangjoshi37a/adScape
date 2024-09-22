@@ -12,9 +12,12 @@
 ## Description
 This project is a web-based system for managing and scheduling advertisements to be displayed on an LED matrix display. The system allows users to upload advertisements and specify a start and end time for them to be displayed.
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/12392345/213869822-651b35ae-0d92-4c33-822c-519db5fcde3a.png" alt="App Screenshot">
-</div>
+![Screenshot from 2023-01-21 19-14-15](https://user-images.githubusercontent.com/12392345/213869822-651b35ae-0d92-4c33-822c-519db5fcde3a.png)
+![Screenshot from 2023-01-21 19-14-33](https://user-images.githubusercontent.com/12392345/213869820-0d9ef50d-c146-45c8-94ce-8e5f9a1e0d90.png)
+![Screenshot from 2023-01-21 19-14-39](https://user-images.githubusercontent.com/12392345/213869819-ec63516b-4376-494a-a6d9-65c8469a342d.png)
+![Screenshot from 2023-01-21 19-14-48](https://user-images.githubusercontent.com/12392345/213869816-35d5bccc-6772-4f50-9ea8-e2ca4f1f0167.png)
+
+
 
 ## Features
 - 🔒 User login and registration
