@@ -12,12 +12,40 @@
 ## Description
 This project is a web-based system for managing and scheduling advertisements to be displayed on an LED matrix display. The system allows users to upload advertisements and specify a start and end time for them to be displayed.
 
-![Screenshot from 2023-01-21 19-14-15](https://user-images.githubusercontent.com/12392345/213869822-651b35ae-0d92-4c33-822c-519db5fcde3a.png)
-![Screenshot from 2023-01-21 19-14-33](https://user-images.githubusercontent.com/12392345/213869820-0d9ef50d-c146-45c8-94ce-8e5f9a1e0d90.png)
-![Screenshot from 2023-01-21 19-14-39](https://user-images.githubusercontent.com/12392345/213869819-ec63516b-4376-494a-a6d9-65c8469a342d.png)
-![Screenshot from 2023-01-21 19-14-48](https://user-images.githubusercontent.com/12392345/213869816-35d5bccc-6772-4f50-9ea8-e2ca4f1f0167.png)
+## Screenshots
 
+### Dashboard
+See what's live on the display right now and what's coming up next.
 
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Schedule
+Search, filter by status, and sort every ad. Deleting asks for confirmation first.
+
+![Schedule](docs/screenshots/schedule.png)
+
+<details>
+<summary>Dark theme and delete confirmation</summary>
+
+![Schedule in dark theme](docs/screenshots/schedule-dark.png)
+![Delete confirmation](docs/screenshots/delete-confirm.png)
+
+</details>
+
+### Upload an ad
+Drag and drop a file, preview it, and set its time window with one-tap durations.
+
+![Upload an ad](docs/screenshots/upload.png)
+
+### Display settings
+Grouped HUB75 panel settings with a live panel-layout preview and an unsaved-changes bar.
+
+![Display settings](docs/screenshots/settings.png)
+
+### On a phone
+Every page works on a phone, and the sidebar becomes a slide-out menu.
+
+![Mobile views](docs/screenshots/mobile.png)
 
 ## Features
 - 🔒 User login and registration
