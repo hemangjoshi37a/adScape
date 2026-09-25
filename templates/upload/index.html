@@ -1,13 +1,274 @@
-<html>
-  <head>
-    <!-- Include the header file -->
-    {% include 'upload/header.html' %}
-  </head>
-  <body>
-    <!-- Include the navigation file -->
-    {% include 'navigation.html' %}
-    <!-- Include the main content file -->
-    {% include 'upload/main-content.html' %}
-  </body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Upload ad{% endblock %}
 
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Upload an ad</h1>
+    <p>Add an image, video or text file, then choose when it plays.</p>
+  </div>
+</div>
+
+<form id="upload-form" action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" novalidate>
+  <div class="grid-2">
+    <section class="card">
+      <div class="card-head"><div><h2>Details</h2><p>How the ad shows up in your schedule</p></div></div>
+      <div class="card-pad">
+        <div class="field">
+          <label class="label" for="ad_name">Name</label>
+          <input class="input" type="text" id="ad_name" name="ad_name" placeholder="e.g. Weekend sale banner" required maxlength="255" autocomplete="off">
+          <div class="error-text" id="ad_name-error"></div>
+        </div>
+        <div class="field">
+          <label class="label" for="ad_description">Description</label>
+          <textarea class="textarea" id="ad_description" name="ad_description" placeholder="Notes for your team: who it's for, the campaign, etc." required></textarea>
+          <div class="error-text" id="ad_description-error"></div>
+        </div>
+
+        <div class="field">
+          <span class="label">Schedule</span>
+          <div class="row-2">
+            <div class="field" style="margin:0">
+              <label class="hint" for="start_time">Start</label>
+              <input class="input" type="datetime-local" id="start_time" name="start_time" required>
+            </div>
+            <div class="field" style="margin:0">
+              <label class="hint" for="end_time">End</label>
+              <input class="input" type="datetime-local" id="end_time" name="end_time" required aria-describedby="time-error duration">
+            </div>
+          </div>
+          <div class="chips" aria-label="Set duration">
+            <span class="hint" style="align-self:center">Run for</span>
+            <button type="button" class="chip" data-hours="1">1 hour</button>
+            <button type="button" class="chip" data-hours="24">1 day</button>
+            <button type="button" class="chip" data-hours="168">1 week</button>
+            <button type="button" class="chip" data-hours="720">30 days</button>
+          </div>
+          <div class="hint" id="duration"></div>
+          <div class="error-text" id="time-error" role="alert"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Media</h2><p>{{ ad_types.values()|sum(start=[])|join(', ')|upper }}</p></div></div>
+      <div class="card-pad">
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="ad_file" name="ad_file" required>
+          <span class="dz-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg></span>
+          <strong>Drop a file here or click to browse</strong>
+          <span class="hint">Images, videos and text files are supported</span>
+        </label>
+
+        <div class="preview" id="preview">
+          <div class="preview-media" id="preview-media"></div>
+          <div class="file-meta">
+            <div class="grow" style="flex:1;min-width:0">
+              <div class="name" id="file-name"></div>
+              <div class="size" id="file-size"></div>
+            </div>
+            <button type="button" class="btn btn-sm" id="change-file">Replace</button>
+          </div>
+        </div>
+        <div class="error-text" id="file-error" role="alert" style="margin-top:8px"></div>
+
+        <div class="progress" id="progress" style="margin-top:16px" aria-hidden="true"><div></div></div>
+        <button type="submit" class="btn btn-primary btn-block" id="submit-button" style="margin-top:16px;height:44px">
+          Upload &amp; schedule
+        </button>
+      </div>
+    </section>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var a = window.adscape;
+  var AD_TYPES = {{ ad_types|tojson }};
+  var form = document.getElementById('upload-form');
+  var start = document.getElementById('start_time');
+  var end = document.getElementById('end_time');
+  var fileInput = document.getElementById('ad_file');
+  var dropzone = document.getElementById('dropzone');
+  var preview = document.getElementById('preview');
+  var media = document.getElementById('preview-media');
+  var submit = document.getElementById('submit-button');
+  var objectUrl = null;
+
+  fileInput.accept = Object.keys(AD_TYPES).reduce(function (all, t) {
+    return all.concat(AD_TYPES[t].map(function (ext) { return '.' + ext; }));
+  }, []).join(',');
+
+  function toLocalInput(d) {
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // Sensible defaults: start now, run for a day.
+  var now = new Date();
+  now.setSeconds(0, 0);
+  start.value = toLocalInput(now);
+  end.value = toLocalInput(new Date(now.getTime() + 864e5));
+
+  function describeDuration(ms) {
+    var h = Math.round(ms / 36e5);
+    if (h < 1) return Math.round(ms / 6e4) + ' minutes';
+    if (h < 48) return h + ' hour' + (h === 1 ? '' : 's');
+    return Math.round(h / 24) + ' days';
+  }
+
+  function validateTimes() {
+    var err = document.getElementById('time-error');
+    var dur = document.getElementById('duration');
+    var ok = start.value && end.value && end.value > start.value;
+    end.setAttribute('aria-invalid', String(!ok && !!end.value));
+    err.textContent = !start.value || !end.value ? 'Choose a start and end time.' : ok ? '' : 'End time must be after the start time.';
+    dur.textContent = ok ? 'Plays for ' + describeDuration(new Date(end.value) - new Date(start.value)) + '.' : '';
+    return ok;
+  }
+
+  function validateText(id, message) {
+    var el = document.getElementById(id);
+    var ok = el.value.trim() !== '';
+    el.setAttribute('aria-invalid', String(!ok));
+    document.getElementById(id + '-error').textContent = ok ? '' : message;
+    return ok;
+  }
+
+  function fileType(file) {
+    var ext = file.name.split('.').pop().toLowerCase();
+    for (var type in AD_TYPES) if (AD_TYPES[type].indexOf(ext) !== -1) return type;
+    return null;
+  }
+
+  function validateFile() {
+    var err = document.getElementById('file-error');
+    var file = fileInput.files[0];
+    var msg = !file ? 'Choose a file to upload.' : !fileType(file) ? 'That file type isn\'t supported.' : '';
+    err.textContent = msg;
+    dropzone.setAttribute('aria-invalid', String(!!msg));
+    return !msg;
+  }
+
+  function formatSize(bytes) {
+    var units = ['B', 'KB', 'MB', 'GB'], i = 0;
+    while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+    return bytes.toFixed(i ? 1 : 0) + ' ' + units[i];
+  }
+
+  function showPreview() {
+    var file = fileInput.files[0];
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    objectUrl = null;
+    if (!file) { preview.classList.remove('is-visible'); dropzone.hidden = false; return; }
+
+    var type = fileType(file);
+    media.innerHTML = '';
+    if (type === 'picture' || type === 'video') {
+      objectUrl = URL.createObjectURL(file);
+      var el = document.createElement(type === 'picture' ? 'img' : 'video');
+      el.src = objectUrl;
+      if (type === 'video') { el.muted = true; el.controls = true; }
+      el.alt = '';
+      media.appendChild(el);
+    } else {
+      media.innerHTML = a.icon('text');
+    }
+    document.getElementById('file-name').textContent = file.name;
+    document.getElementById('file-size').textContent = formatSize(file.size) + (type ? ' · ' + type : '');
+    preview.classList.add('is-visible');
+    dropzone.hidden = true;
+
+    // Pre-fill the name from the file if it's still empty.
+    var name = document.getElementById('ad_name');
+    if (!name.value) {
+      name.value = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+      if (name.getAttribute('aria-invalid') === 'true') validateText('ad_name', '');
+    }
+    validateFile();
+  }
+
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    dropzone.addEventListener(ev, function () { dropzone.classList.add('is-dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dropzone.addEventListener(ev, function () { dropzone.classList.remove('is-dragover'); });
+  });
+
+  fileInput.addEventListener('change', showPreview);
+  document.getElementById('change-file').addEventListener('click', function () { fileInput.click(); });
+  start.addEventListener('change', validateTimes);
+  end.addEventListener('change', validateTimes);
+  start.addEventListener('input', validateTimes);
+  end.addEventListener('input', validateTimes);
+  ['ad_name', 'ad_description'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', function () {
+      if (this.getAttribute('aria-invalid') === 'true') validateText(id, '');
+    });
+  });
+
+  document.querySelectorAll('.chip[data-hours]').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      var s = start.value ? new Date(start.value) : new Date();
+      if (!start.value) start.value = toLocalInput(s);
+      end.value = toLocalInput(new Date(s.getTime() + Number(chip.dataset.hours) * 36e5));
+      validateTimes();
+    });
+  });
+
+  validateTimes();
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var ok = [
+      validateText('ad_name', 'Give the ad a name.'),
+      validateText('ad_description', 'Add a short description.'),
+      validateTimes(),
+      validateFile()
+    ].every(Boolean);
+    if (!ok) {
+      var first = form.querySelector('[aria-invalid="true"]');
+      if (first) (first === dropzone ? fileInput : first).focus();
+      return;
+    }
+
+    // Upload with progress so large videos don't look stuck.
+    var progress = document.getElementById('progress');
+    var bar = progress.firstElementChild;
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', form.action);
+    xhr.upload.addEventListener('progress', function (ev) {
+      if (ev.lengthComputable) {
+        var pct = Math.round(ev.loaded / ev.total * 100);
+        bar.style.width = pct + '%';
+        submit.textContent = 'Uploading… ' + pct + '%';
+      }
+    });
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.onload = function () {
+      var res = {};
+      try { res = JSON.parse(xhr.responseText); } catch (err) { /* not JSON */ }
+      if (xhr.status === 200 && res.ok) {
+        window.location.href = res.redirect || '{{ url_for('schedule') }}';
+      } else {
+        fail(res.message);
+      }
+    };
+    xhr.onerror = function () { fail(); };
+    function fail(message) {
+      submit.disabled = false;
+      submit.textContent = 'Upload & schedule';
+      progress.classList.remove('is-visible');
+      a.toast(message || 'Upload failed. Please try again.', 'error');
+    }
+    submit.disabled = true;
+    submit.textContent = 'Uploading…';
+    progress.classList.add('is-visible');
+    bar.style.width = '0';
+    xhr.send(new FormData(form));
+  });
+});
+</script>
+{% endblock %}

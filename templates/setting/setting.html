@@ -1,99 +1,209 @@
-<html>
-   <head>
-      <title>Display Settings</title>
-      <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
-      <script src="//cdn.muicss.com/mui-0.10.3/js/mui.min.js"></script>
-      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-   </head>
-   <body>
-      {% include 'navigation.html' %}
-      <div class="container">
-         <h1 class="mui--text-center mui--text-display1">Display Settings</h1>
-         <div class="mui-container">
-            <form id="settings-form">
-               <div class="mui-panel">
-                  {% for parameterName, parameter in parameters.items() %}
-                  <div class="mui-form-group" style="padding: 10px">
-                     <label for="{{ parameter.description }}">{{ parameter.description }}</label>
-                     <label> : </label>
-                     <label for="{{ parameterName }}">{{ parameterName }}</label>
-                     <label> = </label>
-                     <select id="{{ parameterName }}" name="{{ parameterName }}" class="mui-form-control">
-                     {% for value in parameter.possible_values %}
-                     <option value="{{ value }}" {% if value == parameter.value %}selected{% endif %}>{{ value }}</option>
-                     {% endfor %}
-                     </select>
-                     
-                  </div>
-                  {% endfor %}
-               </div>
-            </form>
-            <div class="mui-container mui--text-center">
-               <button type="button" id="save-button" onclick="saveSettings();">Save</button>
-            </div>
-         </div>
-         <div id="success-message" class="row" style="display: none;">
-            <div class="col s12">
-               <div class="card-panel green lighten-4">
-                  Settings saved successfully!
-               </div>
-            </div>
-         </div>
-         <div id="error-message" class="row" style="display: none;">
-            <div class="col s12">
-               <div class="card-panel red lighten-4">
-                  An error occurred while saving the settings. Please try again later.
-               </div>
-            </div>
-         </div>
+{% extends 'base.html' %}
+{% block title %}Display settings{% endblock %}
+
+{% macro control(name, p) -%}
+  {%- set values = p.possible_values -%}
+  {%- if p.type == 'boolean' -%}
+    <label class="switch">
+      <input type="checkbox" id="{{ name }}" name="{{ name }}" data-kind="boolean">
+      <span class="track"></span>
+      <span class="sr-only">{{ p.label }}</span>
+    </label>
+  {%- elif p.type == 'number' and values|length > 20 and values[-1] - values[0] == values|length - 1 -%}
+    <div class="range-wrap">
+      <input type="range" id="{{ name }}" name="{{ name }}" min="{{ values[0] }}" max="{{ values[-1] }}" step="1" value="{{ values[0] }}" data-kind="range">
+      <output class="range-value" for="{{ name }}">{{ values[0] }}</output>
+    </div>
+  {%- else -%}
+    <select class="select" id="{{ name }}" name="{{ name }}">
+      {%- for value in values %}
+      <option value="{{ value }}">{{ value }}</option>
+      {%- endfor %}
+    </select>
+  {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Display settings</h1>
+    <p>Configure the HUB75 panels driven by your Raspberry Pi. Changes apply the next time the display starts.</p>
+  </div>
+</div>
+
+<div class="settings-layout">
+  <form id="settings-form" novalidate>
+    {% for group in ['Panel layout', 'Picture', 'Hardware'] %}
+    <section class="card settings-group">
+      <div class="card-head"><div><h2>{{ group }}</h2></div></div>
+      {% for name, p in parameters.items() if (p.group or 'Hardware') == group %}
+      <div class="setting-row" data-row="{{ name }}">
+        <div>
+          <label class="label" for="{{ name }}">{{ p.label or name }} <span class="key">{{ name }}</span></label>
+          <div class="hint">{{ p.description }}</div>
+        </div>
+        <div class="control">{{ control(name, p) }}</div>
       </div>
-      <!-- Add a script to handle saving and loading the settings -->
-      <script>
-         window.onload = function() {
-         // Send an AJAX request to the backend to get the settings from the database
-         var xhr = new XMLHttpRequest();
-         xhr.open('GET', '/get_settings');
-         xhr.onload = function() {
-         if (xhr.status === 200) {
-         // If the request was successful, set the form input values to the returned settings
-         var settings = JSON.parse(xhr.responseText);
-         for (var parameter in settings) {
-         document.getElementsByName(parameter)[0].value = settings[parameter];
-         }
-         } else {
-         // If the request failed, show an error message
-         document.getElementById('error-message').style.display = 'block';
-         }
-         };
-         xhr.send();
-         };
-         
-           function saveSettings() {
-             // Get the settings form
-             var form = document.getElementById('settings-form');
-             // Create an object to store the settings
-             var settings = {};
-             // Loop through the form inputs and add them to the settings object
-             for (var i = 0; i < form.elements.length; i++) {
-               var input = form.elements[i];
-               settings[input.name] = input.value;
-             }
-           
-             // Send the settings to the backend using an AJAX request
-             var xhr = new XMLHttpRequest();
-             xhr.open('POST', '/save_setting');
-             xhr.setRequestHeader('Content-Type', 'application/json');
-             xhr.onload = function() {
-               if (xhr.status === 200) {
-                 // Show a success message if the request was successful
-                 document.getElementById('success-message').style.display = 'block';
-               } else {
-                 // Show an error message if the request failed
-                 document.getElementById('error-message').style.display = 'block';
-               }
-             };
-             xhr.send(JSON.stringify(settings));
-           }
-      </script>
-   </body>
-</html>
+      {% endfor %}
+    </section>
+    {% endfor %}
+
+    <div class="savebar" id="savebar" role="region" aria-label="Unsaved changes">
+      <span id="savebar-text">Unsaved changes</span>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-ghost btn-sm" id="discard">Discard</button>
+      <button type="submit" class="btn btn-primary btn-sm" id="save-button">Save changes</button>
+    </div>
+  </form>
+
+  <aside class="card panel-preview" aria-label="Panel preview">
+    <div class="card-head"><div><h2>Panel preview</h2><p>Layout from your chain and parallel settings</p></div></div>
+    <div class="matrix" id="matrix"></div>
+    <dl class="spec">
+      <dt>Resolution</dt><dd id="spec-res">–</dd>
+      <dt>Panels</dt><dd id="spec-panels">–</dd>
+      <dt>Brightness</dt><dd id="spec-bright">–</dd>
+      <dt>Rotation</dt><dd id="spec-rotate">–</dd>
+    </dl>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var a = window.adscape;
+  var form = document.getElementById('settings-form');
+  var savebar = document.getElementById('savebar');
+  var saveBtn = document.getElementById('save-button');
+  var baseline = {};
+
+  function fields() {
+    return Array.prototype.filter.call(form.elements, function (el) { return el.name; });
+  }
+
+  function getValue(el) {
+    // Booleans are stored as "True"/"False" to match existing saved settings.
+    return el.dataset.kind === 'boolean' ? (el.checked ? 'True' : 'False') : el.value;
+  }
+
+  function setValue(el, value) {
+    if (el.dataset.kind === 'boolean') {
+      el.checked = /^(true|1|yes|on)$/i.test(String(value));
+    } else {
+      el.value = value;
+    }
+    syncOutput(el);
+  }
+
+  function syncOutput(el) {
+    var out = el.parentNode.querySelector('output');
+    if (out) out.textContent = el.value;
+  }
+
+  function values() {
+    var v = {};
+    fields().forEach(function (el) { v[el.name] = getValue(el); });
+    return v;
+  }
+
+  function num(name, fallback) {
+    var el = form.elements[name];
+    var n = el ? Number(el.value) : NaN;
+    return isNaN(n) ? fallback : n;
+  }
+
+  function renderPreview() {
+    var rows = num('led_rows', 32), cols = num('led_cols', 64);
+    var chain = num('led_chain', 1), parallel = num('led_parallel', 1);
+    var bright = num('led_brightness', 100);
+    var mapper = form.elements.led_pixel_mapper ? form.elements.led_pixel_mapper.value : 'none';
+    var matrix = document.getElementById('matrix');
+    matrix.style.gridTemplateColumns = 'repeat(' + chain + ', 1fr)';
+    matrix.style.setProperty('--ar', cols + ' / ' + rows);
+    matrix.style.setProperty('--glow', String(0.25 + 0.75 * bright / 100));
+    matrix.innerHTML = new Array(chain * parallel + 1).join('<div class="tile"></div>');
+    document.getElementById('spec-res').textContent = (cols * chain) + ' × ' + (rows * parallel) + ' px';
+    document.getElementById('spec-panels').textContent = chain * parallel + ' (' + chain + ' × ' + parallel + ')';
+    document.getElementById('spec-bright').textContent = bright + '%';
+    document.getElementById('spec-rotate').textContent = mapper;
+  }
+
+  function refreshDirty() {
+    var current = values();
+    var changed = 0;
+    fields().forEach(function (el) {
+      var isChanged = current[el.name] !== baseline[el.name];
+      if (isChanged) changed++;
+      var row = form.querySelector('[data-row="' + el.name + '"]');
+      if (row) row.classList.toggle('is-changed', isChanged);
+    });
+    savebar.classList.toggle('is-visible', changed > 0);
+    document.getElementById('savebar-text').textContent =
+      changed + ' unsaved change' + (changed === 1 ? '' : 's');
+    return changed;
+  }
+
+  form.addEventListener('input', function (e) {
+    syncOutput(e.target);
+    renderPreview();
+    refreshDirty();
+  });
+  form.addEventListener('change', function () { renderPreview(); refreshDirty(); });
+
+  document.getElementById('discard').addEventListener('click', function () {
+    fields().forEach(function (el) { setValue(el, baseline[el.name]); });
+    renderPreview();
+    refreshDirty();
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var payload = values();
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    fetch('/save_setting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (r) {
+      if (!r.ok) throw new Error();
+      baseline = payload;
+      refreshDirty();
+      a.toast('Settings saved');
+    }).catch(function () {
+      a.toast('Could not save settings. Please try again.', 'error');
+    }).then(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save changes';
+    });
+  });
+
+  // Ctrl/Cmd+S saves.
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (refreshDirty()) form.requestSubmit ? form.requestSubmit() : saveBtn.click();
+    }
+  });
+
+  window.addEventListener('beforeunload', function (e) {
+    if (refreshDirty()) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  fetch('/get_settings')
+    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+    .then(function (saved) {
+      fields().forEach(function (el) {
+        if (Object.prototype.hasOwnProperty.call(saved, el.name)) setValue(el, saved[el.name]);
+      });
+    })
+    .catch(function () { a.toast('Could not load saved settings; showing defaults', 'error'); })
+    .then(function () {
+      baseline = values();
+      renderPreview();
+      refreshDirty();
+    });
+});
+</script>
+{% endblock %}

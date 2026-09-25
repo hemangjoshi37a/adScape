@@ -21,13 +21,16 @@ This project is a web-based system for managing and scheduling advertisements to
 
 ## Features
 - 🔒 User login and registration
-- 📆 Upload and schedule advertisements to be displayed on the LED matrix
-- ✏️ View and edit the current schedule of advertisements
-- 🌞 Adjust display settings such as brightness and scroll speed
+- 📊 Dashboard showing what's live now and what's coming up next
+- 📆 Drag-and-drop upload with media preview, quick duration presets and upload progress
+- 🔎 Searchable, sortable schedule with live / scheduled / ended status
+- 🌞 Grouped display settings with a live panel-layout preview and unsaved-change tracking
+- ▶️ Start/stop the display from any page
+- 🌗 Light and dark themes, responsive on phones, and no CDN dependencies (works on an offline Pi)
 
 ## Tech Stack
-- **Frontend:** HTML, CSS, JavaScript, Materialize CSS
-- **Backend:** Python, Flask, SQLite
+- **Frontend:** HTML (Jinja templates), vanilla CSS and JavaScript, with no external dependencies
+- **Backend:** Python, Flask, MySQL
 
 ---
 

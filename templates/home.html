@@ -1,16 +1,115 @@
-<html>
-  <head>
-    <!-- Include the MUI CSS file -->
-    <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
-    <title>Advertisement LED Matrix Display</title>
-  </head>
-  <body>
-    <!-- Add a navigation bar using MUI's appbar component -->
-    {% include 'navigation.html' %}
-    <!-- Add a container to hold the main content of the page -->
-    <div class="mui-container">
-      <h1 class="mui--text-display1">Welcome to the Advertisement LED Matrix Display</h1>
-      <p class="mui--text-body1">This is the homepage of the LED matrix display system. From here, you can upload and schedule advertisements to be displayed on the LED matrix.</p>
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p>What's on your LED matrix right now, and what's coming up next.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('upload_file') }}">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    New ad
+  </a>
+</div>
+
+<section class="stats" aria-label="Summary">
+  <div class="card stat">
+    <div class="stat-label"><span class="stat-icon tone-live"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M5 12a7 7 0 0 1 14 0M2 12a10 10 0 0 1 20 0"/></svg></span>Live now</div>
+    <div class="stat-value" data-stat="live">–</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-label"><span class="stat-icon tone-upcoming"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Scheduled</div>
+    <div class="stat-value" data-stat="upcoming">–</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-label"><span class="stat-icon tone-neutral"><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>Ended</div>
+    <div class="stat-value" data-stat="expired">–</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-label"><span class="stat-icon tone-accent"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>Total ads</div>
+    <div class="stat-value" data-stat="total">–</div>
+  </div>
+</section>
+
+<div class="grid-2">
+  <div style="display:grid;gap:20px">
+    <section class="card">
+      <div class="card-head">
+        <div><h2>On air now</h2><p>Ads whose schedule includes the current time</p></div>
+        <a class="btn btn-sm" href="{{ url_for('schedule') }}">View schedule</a>
+      </div>
+      <ul class="list" id="live-list"><li><div class="grow"><div class="skeleton" style="width:60%"></div></div></li></ul>
+    </section>
+    <section class="card">
+      <div class="card-head"><div><h2>Up next</h2><p>The next ads due to start</p></div></div>
+      <ul class="list" id="next-list"><li><div class="grow"><div class="skeleton" style="width:45%"></div></div></li></ul>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><div><h2>Quick actions</h2></div></div>
+    <div class="quick-actions">
+      <a href="{{ url_for('upload_file') }}">
+        <span class="qa-icon tone-accent"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg></span>
+        <div><strong>Upload an ad</strong><span>Image, video or text, with a start and end time</span></div>
+      </a>
+      <a href="{{ url_for('schedule') }}">
+        <span class="qa-icon tone-upcoming"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+        <div><strong>Manage schedule</strong><span>Search, sort and remove ads</span></div>
+      </a>
+      <a href="{{ url_for('setting') }}">
+        <span class="qa-icon tone-neutral"><svg class="icon" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>
+        <div><strong>Tune the display</strong><span>Brightness, panel layout and hardware options</span></div>
+      </a>
     </div>
-  </body>
-</html>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var a = window.adscape;
+
+  function row(ad, sub) {
+    return '<li>' + a.thumb(ad) +
+      '<div class="grow"><div class="title">' + a.escapeHtml(ad.ad_name) + '</div>' +
+      '<div class="sub">' + sub + '</div></div>' + a.statusBadge(a.adStatus(ad)) + '</li>';
+  }
+
+  function empty(text) {
+    return '<li><div class="grow sub muted">' + text + '</div></li>';
+  }
+
+  a.fetchAds().then(function (ads) {
+    var now = new Date();
+    var groups = { live: [], upcoming: [], expired: [] };
+    ads.forEach(function (ad) { groups[a.adStatus(ad, now)].push(ad); });
+
+    document.querySelector('[data-stat="live"]').textContent = groups.live.length;
+    document.querySelector('[data-stat="upcoming"]').textContent = groups.upcoming.length;
+    document.querySelector('[data-stat="expired"]').textContent = groups.expired.length;
+    document.querySelector('[data-stat="total"]').textContent = ads.length;
+
+    groups.live.sort(function (x, y) { return a.parseDate(x.ad_end_time) - a.parseDate(y.ad_end_time); });
+    groups.upcoming.sort(function (x, y) { return a.parseDate(x.ad_start_time) - a.parseDate(y.ad_start_time); });
+
+    document.getElementById('live-list').innerHTML = groups.live.length
+      ? groups.live.map(function (ad) { return row(ad, 'Ends ' + a.relative(a.parseDate(ad.ad_end_time), now)); }).join('')
+      : empty('Nothing is scheduled right now. <a href="{{ url_for('upload_file') }}">Upload an ad</a> to fill the screen.');
+
+    document.getElementById('next-list').innerHTML = groups.upcoming.length
+      ? groups.upcoming.slice(0, 5).map(function (ad) {
+          var start = a.parseDate(ad.ad_start_time);
+          return row(ad, 'Starts ' + a.relative(start, now) + ' · ' + a.formatDate(start));
+        }).join('')
+      : empty('No upcoming ads.');
+  }).catch(function () {
+    document.getElementById('live-list').innerHTML = empty('Could not load ads. Check that the database is reachable.');
+    document.getElementById('next-list').innerHTML = '';
+    a.toast('Could not load ads', 'error');
+  });
+});
+</script>
+{% endblock %}

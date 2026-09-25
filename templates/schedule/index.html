@@ -1,13 +1,197 @@
-<html>
-  <head>
-    <!-- Include the header file -->
-    {% include 'schedule/header.html' %}
-  </head>
-  <body>
-    <!-- Include the navigation file -->
-    {% include 'navigation.html' %}
-    <!-- Include the main content file -->
-    {% include 'schedule/main-content.html' %}
-  </body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Schedule{% endblock %}
 
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Ad schedule</h1>
+    <p>Every ad and the time window it plays on the display.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('upload_file') }}">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    New ad
+  </a>
+</div>
+
+<section class="card">
+  <div class="toolbar">
+    <div class="segmented" role="group" aria-label="Filter by status" id="status-filter">
+      <button type="button" data-status="all" aria-pressed="true">All<span class="count" data-count="all"></span></button>
+      <button type="button" data-status="live" aria-pressed="false">Live<span class="count" data-count="live"></span></button>
+      <button type="button" data-status="upcoming" aria-pressed="false">Scheduled<span class="count" data-count="upcoming"></span></button>
+      <button type="button" data-status="expired" aria-pressed="false">Ended<span class="count" data-count="expired"></span></button>
+    </div>
+    <div class="spacer"></div>
+    <label class="search">
+      <span class="sr-only">Search ads</span>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="input" type="search" id="search" placeholder="Search name, description or file…">
+    </label>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table" id="ad-table">
+      <thead>
+        <tr>
+          <th aria-sort="none" data-key="ad_name"><button type="button">Ad</button></th>
+          <th aria-sort="ascending" data-key="ad_start_time"><button type="button">Starts</button></th>
+          <th aria-sort="none" data-key="ad_end_time"><button type="button">Ends</button></th>
+          <th aria-sort="none" data-key="ad_type"><button type="button">Type</button></th>
+          <th aria-sort="none" data-key="status"><button type="button">Status</button></th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody id="ads-table-body">
+        {% for _ in range(3) %}
+        <tr><td colspan="6"><div class="skeleton" style="width:{{ [70, 50, 60][loop.index0] }}%"></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="empty" id="empty" hidden></div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var a = window.adscape;
+  var ads = [];
+  var state = { status: 'all', query: '', sortKey: 'ad_start_time', ascending: true };
+  var tbody = document.getElementById('ads-table-body');
+  var emptyEl = document.getElementById('empty');
+  var STATUS_ORDER = { live: 0, upcoming: 1, expired: 2 };
+  var TYPE_LABEL = { picture: 'Image', video: 'Video', text: 'Text' };
+
+  function valueFor(ad, key) {
+    if (key === 'status') return STATUS_ORDER[ad.status];
+    if (key === 'ad_start_time' || key === 'ad_end_time') return a.parseDate(ad[key]).getTime();
+    return String(ad[key] || '').toLowerCase();
+  }
+
+  function whenCell(label, value, now) {
+    var d = a.parseDate(value);
+    return '<td class="when" data-label="' + label + '"><div>' + a.escapeHtml(a.formatDate(d)) + '</div>' +
+      '<div class="sub">' + a.relative(d, now) + '</div></td>';
+  }
+
+  function render() {
+    var now = new Date();
+    var counts = { all: ads.length, live: 0, upcoming: 0, expired: 0 };
+    ads.forEach(function (ad) { ad.status = a.adStatus(ad, now); counts[ad.status]++; });
+    Object.keys(counts).forEach(function (k) {
+      document.querySelector('[data-count="' + k + '"]').textContent = counts[k];
+    });
+
+    var q = state.query.trim().toLowerCase();
+    var rows = ads.filter(function (ad) {
+      if (state.status !== 'all' && ad.status !== state.status) return false;
+      if (!q) return true;
+      return [ad.ad_name, ad.ad_description, ad.file_name].some(function (v) {
+        return String(v || '').toLowerCase().indexOf(q) !== -1;
+      });
+    });
+
+    rows.sort(function (x, y) {
+      var vx = valueFor(x, state.sortKey), vy = valueFor(y, state.sortKey);
+      var r = vx < vy ? -1 : vx > vy ? 1 : 0;
+      return state.ascending ? r : -r;
+    });
+
+    document.querySelectorAll('#ad-table th[data-key]').forEach(function (th) {
+      th.setAttribute('aria-sort', th.dataset.key === state.sortKey ? (state.ascending ? 'ascending' : 'descending') : 'none');
+    });
+
+    tbody.innerHTML = rows.map(function (ad) {
+      return '<tr>' +
+        '<td data-label="Ad"><div class="ad-cell">' + a.thumb(ad) + '<div style="min-width:0">' +
+          '<div class="title">' + a.escapeHtml(ad.ad_name) + '</div>' +
+          '<div class="sub" title="' + a.escapeHtml(ad.ad_description) + '">' + a.escapeHtml(ad.ad_description || ad.file_name) + '</div>' +
+        '</div></div></td>' +
+        whenCell('Starts', ad.ad_start_time, now) +
+        whenCell('Ends', ad.ad_end_time, now) +
+        '<td data-label="Type"><span class="badge badge-plain">' + (TYPE_LABEL[ad.ad_type] || a.escapeHtml(ad.ad_type)) + '</span></td>' +
+        '<td data-label="Status">' + a.statusBadge(ad.status) + '</td>' +
+        '<td class="actions"><button type="button" class="btn btn-ghost btn-sm" data-delete="' + ad.id + '" aria-label="Delete ' + a.escapeHtml(ad.ad_name) + '">' +
+          '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete</button></td>' +
+      '</tr>';
+    }).join('');
+
+    var showEmpty = rows.length === 0;
+    document.getElementById('ad-table').hidden = showEmpty;
+    emptyEl.hidden = !showEmpty;
+    if (showEmpty) {
+      emptyEl.innerHTML = ads.length === 0
+        ? '<div class="empty-icon"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>' +
+          '<h3>No ads yet</h3><p>Upload your first ad and choose when it should play.</p>' +
+          '<a class="btn btn-primary" href="{{ url_for('upload_file') }}">Upload an ad</a>'
+        : '<h3>No matching ads</h3><p>Try a different search or filter.</p>' +
+          '<button type="button" class="btn" id="clear-filters">Clear filters</button>';
+    }
+  }
+
+  function load() {
+    return a.fetchAds().then(function (data) { ads = data; render(); }).catch(function () {
+      tbody.innerHTML = '';
+      document.getElementById('ad-table').hidden = true;
+      emptyEl.hidden = false;
+      emptyEl.innerHTML = '<h3>Could not load the schedule</h3><p>Check that the database is reachable, then try again.</p>' +
+        '<button type="button" class="btn" id="retry">Retry</button>';
+    });
+  }
+
+  document.getElementById('status-filter').addEventListener('click', function (e) {
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    state.status = btn.dataset.status;
+    this.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
+    render();
+  });
+
+  document.getElementById('search').addEventListener('input', function () {
+    state.query = this.value;
+    render();
+  });
+
+  document.querySelector('#ad-table thead').addEventListener('click', function (e) {
+    var th = e.target.closest('th[data-key]');
+    if (!th) return;
+    state.ascending = state.sortKey === th.dataset.key ? !state.ascending : true;
+    state.sortKey = th.dataset.key;
+    render();
+  });
+
+  emptyEl.addEventListener('click', function (e) {
+    if (e.target.id === 'retry') load();
+    if (e.target.id === 'clear-filters') {
+      state.query = '';
+      document.getElementById('search').value = '';
+      document.querySelector('#status-filter [data-status="all"]').click();
+    }
+  });
+
+  tbody.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-delete]');
+    if (!btn) return;
+    var id = Number(btn.dataset.delete);
+    var ad = ads.find(function (x) { return x.id === id; });
+    a.confirmDialog({
+      title: 'Delete "' + (ad ? ad.ad_name : 'this ad') + '"?',
+      message: 'It will be removed from the schedule and stop playing on the display.',
+      confirmLabel: 'Delete ad'
+    }).then(function (ok) {
+      if (!ok) return;
+      btn.disabled = true;
+      fetch('/delete-ad/' + id, { method: 'DELETE' })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function (data) { ads = data; render(); a.toast('Ad deleted'); })
+        .catch(function () { btn.disabled = false; a.toast('Could not delete the ad', 'error'); });
+    });
+  });
+
+  load();
+  // Keep "Live"/"Scheduled" labels accurate while the page stays open.
+  setInterval(function () { if (ads.length) render(); }, 60000);
+});
+</script>
+{% endblock %}

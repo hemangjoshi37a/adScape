@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} · adScape</title>
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    try { var t = localStorage.getItem('adscape-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  </script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235b4df5'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='10' cy='10' r='2.5'/%3E%3Ccircle cx='16' cy='10' r='2.5'/%3E%3Ccircle cx='22' cy='10' r='2.5' opacity='.4'/%3E%3Ccircle cx='10' cy='16' r='2.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' opacity='.4'/%3E%3Ccircle cx='22' cy='16' r='2.5'/%3E%3Ccircle cx='10' cy='22' r='2.5' opacity='.4'/%3E%3Ccircle cx='16' cy='22' r='2.5'/%3E%3Ccircle cx='22' cy='22' r='2.5'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% set nav_items = [
+    ('home', 'Dashboard', '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>'),
+    ('schedule', 'Schedule', '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>'),
+    ('upload_file', 'Upload ad', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/>'),
+    ('setting', 'Display settings', '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'),
+  ] %}
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="{{ url_for('home') }}">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="var(--accent)"/>
+          <g fill="#fff">
+            <circle cx="10" cy="10" r="2.5"/><circle cx="16" cy="10" r="2.5"/><circle cx="22" cy="10" r="2.5" opacity=".4"/>
+            <circle cx="10" cy="16" r="2.5"/><circle cx="16" cy="16" r="2.5" opacity=".4"/><circle cx="22" cy="16" r="2.5"/>
+            <circle cx="10" cy="22" r="2.5" opacity=".4"/><circle cx="16" cy="22" r="2.5"/><circle cx="22" cy="22" r="2.5"/>
+          </g>
+        </svg>
+        <span>adScape<small>LED matrix manager</small></span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        {% for endpoint, label, path in nav_items %}
+        <a href="{{ url_for(endpoint) }}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">{{ path|safe }}</svg>{{ label }}
+        </a>
+        {% endfor %}
+      </nav>
+      <div class="sidebar-footer">
+        <button type="button" class="btn btn-ghost" id="theme-toggle" style="justify-content:flex-start">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          Toggle theme
+        </button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button type="button" class="btn btn-ghost btn-icon menu-btn" id="menu-btn" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <span class="topbar-title">{{ self.title() }}</span>
+        <div class="topbar-actions">
+          <div class="player" id="player" data-state="unknown" aria-live="polite">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="player-label">Checking…</span>
+            <button type="button" class="btn" disabled>Start</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <dialog class="dialog" id="confirm-dialog">
+    <form method="dialog">
+      <div class="dialog-body">
+        <h2 data-title></h2>
+        <p data-message></p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn" value="cancel">Cancel</button>
+        <button class="btn btn-danger" value="confirm" data-confirm>Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      {% for category, message in messages %}
+      adscape.toast({{ message|tojson }}, {{ (category if category in ['success', 'error'] else 'success')|tojson }});
+      {% endfor %}
+    });
+  </script>
+  {% endif %}
+  {% endwith %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

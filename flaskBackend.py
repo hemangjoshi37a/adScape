@@ -1,4 +1,5 @@
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template, flash, jsonify as flask_jsonify, send_from_directory
+from werkzeug.utils import secure_filename
 import os
 import mysql.connector
 import jsonify
@@ -9,6 +10,13 @@ from mysql_auth import *
 # Set up the Flask app and the file upload destination folder
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploaded_files'
+app.secret_key = os.environ.get('ADSCAPE_SECRET_KEY') or os.urandom(24)
+
+AD_TYPES = {
+    'text': ['txt', 'pdf'],
+    'picture': ['jpg', 'png', 'jpeg'],
+    'video': ['mp4', 'avi', 'wmv', 'm4v', 'mkv', 'webm'],
+}
 
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -64,23 +72,32 @@ cnx.close()
 # Set up a global variable to keep track of the subprocess
 process = None
 
+def is_running():
+    return process is not None and process.poll() is None
+
 @app.route('/start_script')
 def start_script():
     global process
-    # Start the script in a new subprocess
-    process = subprocess.Popen(['python', 'run_picture.py'])
+    # Start the script in a new subprocess (only if it isn't already running)
+    if not is_running():
+        process = subprocess.Popen(['python', 'run_picture.py'])
     print('start_script')
-    return 'Started script'
+    return flask_jsonify(running=is_running())
 
 
 @app.route('/stop_script')
 def stop_script():
     global process
     # Terminate the subprocess
-    process.terminate()
+    if is_running():
+        process.terminate()
     process = None
     print('stop_script')
-    return 'Stopped script'
+    return flask_jsonify(running=False)
+
+@app.route('/script_status')
+def script_status():
+    return flask_jsonify(running=is_running())
 
 @app.route('/get_settings', methods=['GET'])
 def get_settings():
@@ -97,7 +114,7 @@ def get_settings():
     # Fetch the rows from the cursor
     rows = cursor.fetchall()
     cursor.close()
-    cnx.close()
+    connection.close()
 
     # Convert the rows to a dictionary
     settings = {}
@@ -184,11 +201,16 @@ def delete_ad(id):
     cnx = mysql.connector.connect(user=mysql_username,password=mysql_password, host=mysql_host, database='displayad')
     cursor = cnx.cursor()
     # Delete the ad with the specified id
-    cursor.execute(f'DELETE FROM ads WHERE id={id}')
+    cursor.execute('DELETE FROM ads WHERE id = %s', (id,))
     cnx.commit()
     cursor.close()
     cnx.close()
     return fetch_data()
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    # Serve uploaded media so the UI can show previews
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/')
 def home():
@@ -204,6 +226,16 @@ def setting():
 
     return render_template('setting/setting.html', parameters=parameters)
 
+def upload_response(message, category, endpoint):
+    # The upload page submits via JS (for progress) and asks for JSON;
+    # plain form posts still get a flash message and a redirect.
+    wants_json = request.accept_mimetypes.best == 'application/json'
+    if category == 'success' or not wants_json:
+        flash(message, category)
+    if wants_json:
+        return flask_jsonify(ok=category == 'success', message=message, redirect=url_for(endpoint)), (200 if category == 'success' else 400)
+    return redirect(url_for(endpoint))
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
@@ -215,36 +247,38 @@ def upload_file():
         ad_description = request.form['ad_description']
 
         # Get the file from the form
-        file = request.files['ad_file']
+        file = request.files.get('ad_file')
+        if file is None or file.filename == '':
+            return upload_response('Please choose a file to upload.', 'error', 'upload_file')
+
+        if not start_time or not end_time or end_time <= start_time:
+            return upload_response('End time must be after the start time.', 'error', 'upload_file')
 
         # Determine the type of advertisement based on the file extension
-        file_extension = file.filename.split(".")[-1]
-        if file_extension in ["txt", "pdf"]:
-            ad_type = "text"
-        elif file_extension in ["jpg", "png", "jpeg"]:
-            ad_type = "picture"
-        elif file_extension in ["mp4", "avi", "wmv",'m4v','mkv','webm']:
-            ad_type = "video"
-        else:
+        filename = secure_filename(file.filename)
+        file_extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        ad_type = next((t for t, exts in AD_TYPES.items() if file_extension in exts), None)
+        if ad_type is None:
             # Invalid file type
-            return redirect(url_for('schedule'))
+            return upload_response('Unsupported file type ".%s".' % file_extension, 'error', 'upload_file')
 
         # Save the file to the UPLOAD_FOLDER
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         cnx = mysql.connector.connect(user=mysql_username,password=mysql_password, host=mysql_host, database='displayad')
         cursor = cnx.cursor()
         # Insert the ad data into the MySQL database
         insert_query = "INSERT INTO ads (start_time, end_time, ad_name, ad_description, file_name, ad_type) VALUES (%s, %s, %s, %s, %s, %s)"
-        cursor.execute(insert_query, (start_time, end_time, ad_name, ad_description, file.filename, ad_type))
+        cursor.execute(insert_query, (start_time, end_time, ad_name, ad_description, filename, ad_type))
         cnx.commit()
+        cursor.close()
+        cnx.close()
 
-        # Redirect the user to the home page
-#         print('upload_completed')
-        return redirect(url_for('schedule'))
+        # Redirect the user to the schedule page
+        return upload_response('"%s" was scheduled.' % ad_name, 'success', 'schedule')
     else:
         # Render the upload/index.html template
 #         print('rewnesder_upload')
-        return render_template('upload/index.html')
+        return render_template('upload/index.html', ad_types=AD_TYPES)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=5004)
